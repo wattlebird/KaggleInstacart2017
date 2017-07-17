@@ -40,8 +40,8 @@ print(params)
 
 for i, val in enumerate(cv):
     print("Cross validation process iteration {0}".format(i+1))
-    train = f[~f['seed'].isin(val)].drop(['order_id', 'user_id', 'product_id', 'seed', 'user_lastorder_interval_x'], axis=1)
-    valid = f[f['seed'].isin(val)].drop(['order_id', 'user_id', 'product_id', 'seed', 'user_lastorder_interval_x'], axis=1)
+    train = f[~f['seed'].isin(val)].drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)
+    valid = f[f['seed'].isin(val)].drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)
 
     X = lgb.Dataset(train.drop('label', axis=1), train['label'], categorical_feature=['aisle_id', 'department_id', 'order_dow', 'order_hour_of_day', 'user_prod_reordered', 'user_prod_recentlydiscovered'])
     V = lgb.Dataset(valid.drop('label', axis=1), valid['label'], categorical_feature=['aisle_id', 'department_id', 'order_dow', 'order_hour_of_day', 'user_prod_reordered', 'user_prod_recentlydiscovered'], reference=X)

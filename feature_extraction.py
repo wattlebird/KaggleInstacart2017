@@ -172,12 +172,11 @@ def generate_product_user_feature():
         'product_id': np.uint16,
         'label': np.int8
     }, usecols=['order_id', 'user_id', 'product_id'], engine='c')
-    train = train.merge(orders[['order_id', 'user_id', 'order_number', 'accu_interval', 'days_since_prior_order']][orders.eval_set=='train'], on=['order_id', 'user_id'])
+    train = train.merge(orders[['order_id', 'user_id', 'order_number', 'accu_interval']][orders.eval_set=='train'], on=['order_id', 'user_id'])
     train = train.merge(upsp, on=['user_id', 'product_id'])
     train['user_prod_lastorder_interval'] = train.order_number-train.last_order_number
     train['user_prod_lastdays_interval'] = train.accu_interval-train.interval_accu
     train.drop(['order_number', 'accu_interval', 'last_order_number', 'interval_accu'], axis=1, inplace=True)
-    train.rename(columns={'days_since_prior_order': 'user_lastorder_interval'}, inplace=True)
     train = train.merge(product_feature, left_on='product_id', right_index=True).merge(user_product_feature, on=['user_id', 'product_id'])
     train['user_prod_lastorder_interval_rate'] = train.user_prod_lastorder_interval / train.user_prod_order_interval
     train['user_prod_lastdays_interval_rate']  = train.user_prod_lastdays_interval / train.user_prod_days_interval
@@ -190,12 +189,11 @@ def generate_product_user_feature():
         'user_id': np.int32,
         'product_id': np.uint16
     })
-    test = test.merge(orders[['order_id', 'user_id', 'order_number', 'accu_interval', 'days_since_prior_order']][orders.eval_set=='test'], on=['order_id', 'user_id'])
+    test = test.merge(orders[['order_id', 'user_id', 'order_number', 'accu_interval']][orders.eval_set=='test'], on=['order_id', 'user_id'])
     test = test.merge(upsp, on=['user_id', 'product_id'])
     test['user_prod_lastorder_interval'] = test.order_number-test.last_order_number
     test['user_prod_lastdays_interval'] = test.accu_interval-test.interval_accu
     test.drop(['order_number', 'accu_interval', 'last_order_number', 'interval_accu'], axis=1, inplace=True)
-    test.rename(columns={'days_since_prior_order': 'user_lastorder_interval'}, inplace=True)
     test = test.merge(product_feature, left_on='product_id', right_index=True).merge(user_product_feature, on=['user_id', 'product_id'])
     test['user_prod_lastorder_interval_rate'] = test.user_prod_lastorder_interval / test.user_prod_order_interval
     test['user_prod_lastdays_interval_rate']  = test.user_prod_lastdays_interval / test.user_prod_days_interval
