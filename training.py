@@ -6,7 +6,12 @@ import lightgbm as lgb
 data = "/mnt/d/Data/Instacart/"
 
 train = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "train").drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)
-
+train['aisle_id'] = train.aisle_id.astype('category')
+train['department_id'] = train.department_id.astype('category')
+train['order_dow'] = train.order_dow.astype('category')
+train['order_hour_of_day'] = train.order_hour_of_day.astype('category')
+train['user_prod_reordered'] = train.user_prod_reordered.astype('category')
+train['user_prod_recentlydiscovered'] = train.user_prod_recentlydiscovered.astype('category')
 
 TH = 0.20
 
@@ -27,13 +32,19 @@ params = {
     'verbose': 1
 }
 
-X = lgb.Dataset(train.drop('label', axis=1), train['label'], categorical_feature=['aisle_id', 'department_id', 'order_dow', 'order_hour_of_day', 'user_prod_reordered', 'user_prod_recentlydiscovered'])
+X = lgb.Dataset(train.drop('label', axis=1), train['label'])
 
 gbdt = lgb.train(params, X, num_boost_round=160)
 
 gbdt.save_model("model.txt")
 
 test = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "test")
+test['aisle_id'] = test.aisle_id.astype('category')
+test['department_id'] = test.department_id.astype('category')
+test['order_dow'] = test.order_dow.astype('category')
+test['order_hour_of_day'] = test.order_hour_of_day.astype('category')
+test['user_prod_reordered'] = test.user_prod_reordered.astype('category')
+test['user_prod_recentlydiscovered'] = test.user_prod_recentlydiscovered.astype('category')
 Y = gbdt.predict(test.drop(['order_id', 'user_id', 'product_id'], axis=1))
 
 test['label'] = Y>TH

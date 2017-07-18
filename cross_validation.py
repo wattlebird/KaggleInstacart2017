@@ -21,6 +21,12 @@ def f1(preds, train_data):
     Yt = train_data.get_label()
     return 'f1', f1_score(Yt, preds>TH), True
 
+grpf1 = lambda x: pd.Series(data={
+    'f1': 1.0
+}) if not (x.label.any() or x.pred.any()) else pd.Series(data={
+    'f1': f1_score(x.label, x.pred)
+})
+
 print("Cutting threshold: {0}".format(TH))
 
 params = {
@@ -38,6 +44,9 @@ params = {
 print("Configuration: ")
 print(params)
 
+f1v = []
+aucv = []
+
 for i, val in enumerate(cv):
     print("Cross validation process iteration {0}".format(i+1))
     train = f[~f['seed'].isin(val)].drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)
@@ -51,8 +60,23 @@ for i, val in enumerate(cv):
     gbdt = lgb.train(params, X, valid_sets=V, feval=f1, verbose_eval=False)
     print("Training end for iteration {0}".format(i+1))
 
-    ax = lgb.plot_importance(gbdt)
-    plt.savefig("feature_importance_cv{0}.png".format(i+1))
+    gbdt.save_model("model_iter{0}.txt".format(i+1))
 
     yp = gbdt.predict(valid.drop('label', axis=1))
+    f1v.append(f1_score(valid['label'].values, yp>TH))
+    aucv.append(roc_auc_score(valid['label'].values, yp))
     print("F1: {0}\nAUC: {1}".format(f1_score(valid['label'].values, yp>TH), roc_auc_score(valid['label'].values, yp)))
+
+    if i==0:
+        print("Print DSAT debug case...")
+        valid_label = f[['order_id', 'user_id', 'product_id', 'label']][f['seed'].isin(val)]
+        valid_label['pred'] = np.require(yp>TH, dtype=np.int)
+        valid_label['pred_prob'] = yp
+        f1 = valid_label[['user_id', 'label', 'pred', 'pred_prob']].groupby(by='user_id').apply(grpf1)
+        valid_label = valid_label.merge(f1, left_on='user_id', right_index=True).sort_values('f1')
+        valid_label.to_csv("dsatdebug.tsv", sep='\t', index=False)
+
+    del X, V, gbdt
+
+print("Avg F1: {0}".format(np.mean(f1v)))
+print("Avg auc: {0}".format(np.mean(aucv)))
