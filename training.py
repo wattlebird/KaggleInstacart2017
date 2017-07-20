@@ -24,11 +24,11 @@ params = {
     'boosting_type': 'gbdt',
     'objective': 'binary',
     'metric': {'auc'},
-    'num_leaves': 127,
-    'max_depth': 10,
+    'num_leaves': 192,
+    'max_depth': 11,
     'feature_fraction': 0.9,
     'bagging_fraction': 0.95,
-    'bagging_freq': 5, 
+    'bagging_freq': 5,
     'verbose': 1
 }
 
