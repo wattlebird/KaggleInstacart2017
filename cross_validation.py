@@ -3,6 +3,8 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from scipy.optimize import minimize_scalar
 from parametertunning import gbdt_cross_validation_data, gbdt_training, mailsend, mailsendfail
+import os
+from azure.storage.blob import BlockBlobService, ContentSettings
 
 
 params = {
@@ -16,16 +18,21 @@ params = {
     'bagging_freq': 5
 }
 
-a = [92, 128, 160, 192, 224, 256]
+feature_name = "num_leaves"
+title = "GDBT num_leaves tunning experiment"
+candidate_param = [92, 128, 160, 192, 224, 256]
+block_blob_service = BlockBlobService(account_name=os.environ['AZURE_STORAGE_IKELY_ACCOUNT'], 
+                                      account_key=os.environ['AZURE_STORAGE_IKELY_KEY'])
+
 
 def main():
-    title = "GDBT num_leaves tunning experiment"
+    
     try:
         f1v = []
         aucv = []
         print("Cross validation start.")
-        for num_leaves in a:
-            params['num_leaves'] = num_leaves
+        for cp in candidate_param:
+            params[feature_name] = cp
             f1temp = []
             auctemp = []
             print("{0} parameters to be tunned.".format(len(a)))
@@ -66,11 +73,15 @@ def main():
                     debug_table.to_csv("debug_{0}.tsv".format(i), sep='\t')
                     valid_label.to_csv("debug_product_record_{0}.tsv".format(i), sep='\t')
                     # since the file is very big one may upload it to azure 
-
+                    block_blob_service.create_blob_from_path('temp', "debug_{0}.tsv".format(feature_name), "debug_{0}.tsv".format(i),
+                                                             content_settings=ContentSettings(content_type='text/tsv'))
+                    block_blob_service.create_blob_from_path('temp', "debug_product_record_{0}.tsv".format(feature_name), 
+                                                             "debug_product_record_{0}.tsv".format(i),
+                                                             content_settings=ContentSettings(content_type='text/tsv'))
             
             f1v.append(np.mean(f1temp))
             aucv.append(np.mean(auctemp))
-        mailsend(title, params, 'num_leaves', a, f1v, aucv)
+        mailsend(title, params, feature_name, candidate_param, f1v, aucv)
 
     except Exception as e:
         try:

@@ -19,7 +19,7 @@ def mailsend(experiment, parameter, targetname, target, f1, auc):
         {0}
         Bonjour! The experiment "{1}" parameter tunning has completed. 
 
-        Parameter:
+        Parameter setting:
         {2}
 
         Cross-validation Tunning Result:
