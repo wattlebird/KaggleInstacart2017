@@ -1,8 +1,7 @@
 import numpy as np
 import pandas as pd
 
-data = "/mnt/d/Data/Instacart/"
-hdffile = "/mnt/d/Data/Instacart/dataset.hdf"
+data = "/home/azureuser/Data/"
 
 second_order_ratio = lambda x: x[x==1].count()/x[x==0].count()
 avginterval = lambda x: np.inf if x.shape[0]==1 else (x.max()-x.min())/(x.shape[0]-1)
@@ -59,7 +58,7 @@ def generate_user_features():
     user_feature['user_nritem_per_order'] = user_feature.user_nritems/(user_feature.user_norder-1)
     user_feature['user_nritem_per_order_ratio'] = user_feature.user_nritem_per_order/user_feature.user_nitem_per_order
 
-    user_feature[['user_interval', 'user_norder']].to_hdf("/mnt/d/Data/Instacart/dataset.hdf", "user_feature")
+    user_feature[['user_interval', 'user_norder']].to_hdf("/home/azureuser/Data/dataset.hdf", "user_feature")
 
     train = pd.read_csv(data+"train.tsv", sep='\t', dtype={
         'order_id': np.int32,
@@ -153,7 +152,7 @@ def generate_product_user_feature():
     user_product_feature.user_prod_order_interval = user_product_feature.user_prod_order_interval.fillna(100)
     del up1, up2, up3, up4
 
-    user_feature = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "user_feature")
+    user_feature = pd.read_hdf("/home/azureuser/Data/dataset.hdf", "user_feature")
     user_product_feature = user_product_feature.merge(user_feature, left_on='user_id',
                                                  right_index=True)
     user_product_feature['user_prod_norder_rate'] = user_product_feature.user_prod_norder/user_product_feature.user_norder
@@ -430,19 +429,19 @@ if __name__=="__main__":
     test = test.merge(testi, on=['order_id', 'user_id', 'product_id'])
     del traini, testi
 
-    train['aisle_id'] = train.aisle_id.astype('category')
-    train['department_id'] = train.department_id.astype('category')
-    train['order_dow'] = train.order_dow.astype('category')
-    train['order_hour_of_day'] = train.order_hour_of_day.astype('category')
-    train['user_prod_reordered'] = train.user_prod_reordered.astype('category')
-    train['user_prod_recentlydiscovered'] = train.user_prod_recentlydiscovered.astype('category')
+    #train['aisle_id'] = train.aisle_id.astype('category')
+    #train['department_id'] = train.department_id.astype('category')
+    #train['order_dow'] = train.order_dow.astype('category')
+    #train['order_hour_of_day'] = train.order_hour_of_day.astype('category')
+    #train['user_prod_reordered'] = train.user_prod_reordered.astype('category')
+    #train['user_prod_recentlydiscovered'] = train.user_prod_recentlydiscovered.astype('category')
 
-    test['aisle_id'] = test.aisle_id.astype('category')
-    test['department_id'] = test.department_id.astype('category')
-    test['order_dow'] = test.order_dow.astype('category')
-    test['order_hour_of_day'] = test.order_hour_of_day.astype('category')
-    test['user_prod_reordered'] = test.user_prod_reordered.astype('category')
-    test['user_prod_recentlydiscovered'] = test.user_prod_recentlydiscovered.astype('category')
+    #test['aisle_id'] = test.aisle_id.astype('category')
+    #test['department_id'] = test.department_id.astype('category')
+    #test['order_dow'] = test.order_dow.astype('category')
+    #test['order_hour_of_day'] = test.order_hour_of_day.astype('category')
+    #test['user_prod_reordered'] = test.user_prod_reordered.astype('category')
+    #test['user_prod_recentlydiscovered'] = test.user_prod_recentlydiscovered.astype('category')
 
-    train.to_hdf("/mnt/d/Data/Instacart/dataset.hdf", "train")
-    test.to_hdf("/mnt/d/Data/Instacart/dataset.hdf", "test")
+    train.to_hdf("/home/azureuser/Data/dataset.hdf", "train")
+    test.to_hdf("/home/azureuser/dataset.hdf", "test")
