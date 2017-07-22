@@ -13,7 +13,7 @@ train['order_hour_of_day'] = train.order_hour_of_day.astype('category')
 train['user_prod_reordered'] = train.user_prod_reordered.astype('category')
 train['user_prod_recentlydiscovered'] = train.user_prod_recentlydiscovered.astype('category')
 
-TH = 0.20
+TH = 0.221798681
 
 def f1(preds, train_data):
     Yt = train_data.get_label()
@@ -25,6 +25,7 @@ params = {
     'objective': 'binary',
     'metric': {'auc'},
     'num_leaves': 192,
+    'min_data_in_leaf': 200,
     'max_depth': 11,
     'feature_fraction': 0.9,
     'bagging_fraction': 0.95,
