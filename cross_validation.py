@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from scipy.optimize import minimize_scalar
-from parametertunning import gbdt_cross_validation_data_debug, gbdt_training, mailsend, mailsendfail
+from parametertunning import gbdt_cross_validation_data, gbdt_training, mailsend, mailsendfail
 import os
 from azure.storage.blob import BlockBlobService, ContentSettings
 
@@ -12,16 +12,16 @@ params = {
     'boosting_type': 'gbdt',
     'objective': 'binary',
     'metric': {'auc'},
-    'num_leaves': 192,
+    'num_leaves': 224,
     'feature_fraction': 0.9,
     'bagging_fraction': 0.95,
     'bagging_freq': 5,
     'verbose': 0
 }
 
-feature_name = "num_leaves"
-title = "GDBT num_leaves tunning experiment"
-candidate_param = [96]
+feature_name = "min_data_in_leaf"
+title = "GDBT min_data_in_leaf tunning experiment"
+candidate_param = [50, 100, 200, 400, 800]
 block_blob_service = BlockBlobService(account_name=os.environ['AZURE_STORAGE_IKELY_ACCOUNT'], 
                                       account_key=os.environ['AZURE_STORAGE_IKELY_KEY'])
 
@@ -39,7 +39,7 @@ def main():
             print("{0} parameters to be tunned.".format(len(candidate_param)))
 
         
-            for i, (train, valid, valid_label) in enumerate(gbdt_cross_validation_data_debug()):
+            for i, (train, valid, valid_label) in enumerate(gbdt_cross_validation_data()):
                 print("New iteration {0}, parameters: {1}".format(i+1, params))
                 print("Start training...")
                 model = gbdt_training(params, train, valid, verbose=False)
@@ -52,7 +52,7 @@ def main():
                 def obj(y):
                     return -valid_label[['user_id', 'label', 'pred_prob']].groupby('user_id').apply(lambda x: f1_score(x.label, x.pred_prob>y)).mean()
 
-                th = minimize_scalar(obj, bracket=(0.15, 0.2), method='brent', tol=1e-2)
+                th = minimize_scalar(obj, bracket=(0.15, 0.25), method='brent', tol=1e-5)
                 print("Threshold found. {0}.".format(th.x))
 
                 f1temp.append(valid_label[['user_id', 'label', 'pred_prob']].\

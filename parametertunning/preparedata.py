@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 def gbdt_cross_validation_data():
-    f = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "train")
+    f = pd.read_hdf("/home/azureuser/Data/dataset.hdf", "train")
     f['aisle_id'] = f.aisle_id.astype('category')
     f['department_id'] = f.department_id.astype('category')
     f['order_dow'] = f.order_dow.astype('category')
@@ -16,7 +16,7 @@ def gbdt_cross_validation_data():
         yield train, valid, valid_label
 
 def gbdt_cross_validation_data_debug():
-    f = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "train").head(10000)
+    f = pd.read_hdf("/home/azureuser/Data/dataset.hdf", "train").head(10000)
     f['aisle_id'] = f.aisle_id.astype('category')
     f['department_id'] = f.department_id.astype('category')
     f['order_dow'] = f.order_dow.astype('category')

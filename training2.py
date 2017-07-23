@@ -10,7 +10,7 @@ params = {
     'boosting_type': 'gbdt',
     'objective': 'binary',
     'metric': {'auc'},
-    'num_leaves': 192,
+    'num_leaves': 224,
     'feature_fraction': 0.9,
     'bagging_fraction': 0.95,
     'bagging_freq': 5,
@@ -39,7 +39,7 @@ def main():
         modelv.append(model)
 
     print("Loading test data...")
-    test = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "test")
+    test = pd.read_hdf("/home/azureuser/Data/dataset.hdf", "test")
     test['aisle_id'] = test.aisle_id.astype('category')
     test['department_id'] = test.department_id.astype('category')
     test['order_dow'] = test.order_dow.astype('category')
