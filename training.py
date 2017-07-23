@@ -2,8 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import f1_score, roc_auc_score
 import lightgbm as lgb
-
-data = "/mnt/d/Data/Instacart/"
+from setting import *
 
 train = pd.read_hdf(data+"dataset.hdf", "train").drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)
 train['aisle_id'] = train.aisle_id.astype('category')
