@@ -61,7 +61,7 @@ def mailsendfail(experiment, parameter, exception):
 
     """.format(datetime.today().strftime("%a, %d %b %Y %H:%M:%S"), experiment, parameter, str(exception)))
 
-    msg['Subject'] = "Parameter Tunning Completed."
+    msg['Subject'] = "Parameter Tunning Failed."
     msg['From'] = "azureuser@cloudymiao.cloudapp.net"
     msg['To'] = "geniusxiaoguai@gmail.com"
 
