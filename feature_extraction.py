@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
-
-data = "/mnt/d/Data/Instacart/"
-hdffile = "/mnt/d/Data/Instacart/dataset.hdf"
+from setting import *
 
 second_order_ratio = lambda x: x[x==1].count()/x[x==0].count()
 avginterval = lambda x: np.inf if x.shape[0]==1 else (x.max()-x.min())/(x.shape[0]-1)
@@ -59,7 +57,7 @@ def generate_user_features():
     user_feature['user_nritem_per_order'] = user_feature.user_nritems/(user_feature.user_norder-1)
     user_feature['user_nritem_per_order_ratio'] = user_feature.user_nritem_per_order/user_feature.user_nitem_per_order
 
-    user_feature[['user_interval', 'user_norder']].to_hdf("/mnt/d/Data/Instacart/dataset.hdf", "user_feature")
+    user_feature[['user_interval', 'user_norder']].to_hdf(data+"dataset.hdf", "user_feature")
 
     train = pd.read_csv(data+"train.tsv", sep='\t', dtype={
         'order_id': np.int32,
@@ -153,7 +151,7 @@ def generate_product_user_feature():
     user_product_feature.user_prod_order_interval = user_product_feature.user_prod_order_interval.fillna(100)
     del up1, up2, up3, up4
 
-    user_feature = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "user_feature")
+    user_feature = pd.read_hdf(data+"dataset.hdf", "user_feature")
     user_product_feature = user_product_feature.merge(user_feature, left_on='user_id',
                                                  right_index=True)
     user_product_feature['user_prod_norder_rate'] = user_product_feature.user_prod_norder/user_product_feature.user_norder
@@ -444,5 +442,5 @@ if __name__=="__main__":
     test['user_prod_reordered'] = test.user_prod_reordered.astype('category')
     test['user_prod_recentlydiscovered'] = test.user_prod_recentlydiscovered.astype('category')
 
-    train.to_hdf("/mnt/d/Data/Instacart/dataset.hdf", "train")
-    test.to_hdf("/mnt/d/Data/Instacart/dataset.hdf", "test")
+    train.to_hdf(data+"dataset.hdf", "train")
+    test.to_hdf(data+"dataset.hdf", "test")

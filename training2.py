@@ -1,21 +1,11 @@
 import numpy as np
 import pandas as pd
-from sklearn.metrics import f1_score, roc_auc_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 import lightgbm as lgb
 from scipy.optimize import minimize_scalar
 from parametertunning import gbdt_cross_validation_data, gbdt_training
-
-params = {
-    'task': 'train',
-    'boosting_type': 'gbdt',
-    'objective': 'binary',
-    'metric': {'auc'},
-    'num_leaves': 192,
-    'feature_fraction': 0.9,
-    'bagging_fraction': 0.95,
-    'bagging_freq': 5,
-    'verbose': 0
-}
+from datetime import datetime
+from setting import *
 
 def main():
     thv = []
@@ -37,6 +27,21 @@ def main():
         print("Threshold found. {0}.".format(th.x))
         thv.append(th.x)
         modelv.append(model)
+
+        if i==0:
+            print("Dumping dsat debug file...")
+            valid_label['pred'] = np.require(valid_label.pred_prob>th.x, dtype = np.int)
+            prec = lambda g: precision_score(valid_label.ix[g.index]['label'].values, valid_label.ix[g.index]['pred'].values)
+            reca = lambda g: recall_score(valid_label.ix[g.index]['label'].values, valid_label.ix[g.index]['pred'].values)
+            accu = lambda g: accuracy_score(valid_label.ix[g.index]['label'].values, valid_label.ix[g.index]['pred'].values)
+            f1sc = lambda g: f1_score(valid_label.ix[g.index]['label'].values, valid_label.ix[g.index]['pred'].values)
+
+            debug_table = valid_label[['user_id', 'label', 'pred']].groupby(by='user_id').agg({'pred': {'precision': prec, 'recall': reca, 'accuracy': accu, 'f1': f1sc}})
+            debug_table.to_csv("debug_{0}.tsv".format(i), sep='\t')
+            valid_label.to_csv("debug_product_record_{0}.tsv".format(i), sep='\t')
+            # since the file is very big one may upload it to azure 
+            uploadfile("debug_{0}.tsv".format(i), "debug_{0}.tsv".format(feature_name))
+            uploadfile("debug_product_record_{0}.tsv".format(i), "debug_product_record_{0}.tsv".format(feature_name))
 
     print("Loading test data...")
     test = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "test")
@@ -72,6 +77,7 @@ def main():
     sub.reset_index(inplace=True)
     sub.columns = ['order_id', 'products']
     sub.to_csv('result.csv', index=False)
+    uploadfile("result.csv", "result_{0}.csv".format(datetime.today().strftime("%Y-%m-%d_%H_%M_%S")))
 
 if __name__=="__main__":
     main()

@@ -3,5 +3,8 @@ feature_importance_cv*
 model*
 dsat*
 *.xlsx
-__pycache__/
+parametertunning/__pycache__/
 *.pyc
+.ipynb_checkpoints/
+.vscode/
+*.msg
