@@ -3,3 +3,5 @@ feature_importance_cv*
 model*
 dsat*
 *.xlsx
+__pycache__/
+*.pyc

@@ -5,7 +5,7 @@ import lightgbm as lgb
 
 data = "/mnt/d/Data/Instacart/"
 
-train = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "train").drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)
+train = pd.read_hdf(data+"dataset.hdf", "train").drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)
 train['aisle_id'] = train.aisle_id.astype('category')
 train['department_id'] = train.department_id.astype('category')
 train['order_dow'] = train.order_dow.astype('category')
@@ -39,7 +39,7 @@ gbdt = lgb.train(params, X, num_boost_round=160)
 
 gbdt.save_model("model.txt")
 
-test = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "test")
+test = pd.read_hdf(data+"dataset.hdf", "test")
 test['aisle_id'] = test.aisle_id.astype('category')
 test['department_id'] = test.department_id.astype('category')
 test['order_dow'] = test.order_dow.astype('category')
