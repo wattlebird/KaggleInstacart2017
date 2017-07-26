@@ -4,6 +4,7 @@ from email.message import EmailMessage
 from datetime import datetime
 import pandas as pd
 
+pp = PrettyPrinter()
 
 def mailsend(experiment, parameter, targetname, target, f1, auc):
     paramtable = pd.DataFrame({
@@ -19,7 +20,7 @@ def mailsend(experiment, parameter, targetname, target, f1, auc):
     msg.set_content("{0}\nBonjour! The experiment \"{1}\" parameter tunning has completed."\
     "\nParameter setting:\n{2}\nCross-validation Tunning Result:\n{3}\n"\
     "Yours sincerely\nTeam parameter tunning server"\
-    .format(datetime.today().strftime("%a, %d %b %Y %H:%M:%S"), experiment, parameter, paramtable.to_string()))
+    .format(datetime.today().strftime("%a, %d %b %Y %H:%M:%S"), experiment, pp.pformat(parameter), paramtable.to_string()))
 
     msg.add_alternative("""\
     <html>
@@ -35,7 +36,7 @@ def mailsend(experiment, parameter, targetname, target, f1, auc):
         Team parameter tunning server
       </body>
     </html>
-    """.format(datetime.today().strftime("%a, %d %b %Y %H:%M:%S"), experiment, parameter, paramtable.to_html()),\
+    """.format(datetime.today().strftime("%a, %d %b %Y %H:%M:%S"), experiment, pp.pformat(parameter), paramtable.to_html()),\
     subtype="html")
 
     # in case mail sending failed
@@ -47,6 +48,46 @@ def mailsend(experiment, parameter, targetname, target, f1, auc):
     s.send_message(msg)
     s.quit()
 
+def mailsend_feature_selection(feature_list, aucv, parameter):
+    paramtable = pd.DataFrame({
+        'AUC': aucv
+    }, index=pd.Index(['Baseline']+feature_list, name="FeatureName"))
+
+    msg = EmailMessage()
+    msg['Subject'] = "Feature Selection Completed."
+    msg['From'] = "azureuser@cloudymiao.cloudapp.net"
+    msg['To'] = "geniusxiaoguai@gmail.com"
+
+    msg.set_content("{0}\nBonjour! The feature selection experiment has completed."\
+    "\nParameter setting:\n{1}\nFeature selection result:\n{2}\n"\
+    "Yours sincerely\nTeam parameter tunning server"\
+    .format(datetime.today().strftime("%a, %d %b %Y %H:%M:%S"), pp.pformat(parameter), paramtable.to_string()))
+
+    msg.add_alternative("""\
+    <html>
+      <head></head>
+      <body>
+        {0}
+        <p>Bonjour! The feature selection experiment has completed.</p>
+        <p>Parameter setting: {1}</p>
+        <p>Cross-validation Tunning Result</p>
+        {2}
+        <br/>
+        Yours sincerely
+        Team parameter tunning server
+      </body>
+    </html>
+    """.format(datetime.today().strftime("%a, %d %b %Y %H:%M:%S"), pp.pformat(parameter), paramtable.to_html()),\
+    subtype="html")
+
+    # in case mail sending failed
+    with open('experiment_completed_{0}.msg'.format(datetime.today().strftime("%Y-%m-%d_%H_%M_%S")), 'wb') as f:
+        f.write(bytes(msg))
+
+    # Send the message via our own SMTP server.
+    s = smtplib.SMTP('localhost')
+    s.send_message(msg)
+    s.quit()
 
 def mailsendfail(experiment, parameter, exception):
 
@@ -64,7 +105,7 @@ def mailsendfail(experiment, parameter, exception):
     Yours sincerely
     Team parameter tunning server
 
-    """.format(datetime.today().strftime("%a, %d %b %Y %H:%M:%S"), experiment, parameter, str(exception)))
+    """.format(datetime.today().strftime("%a, %d %b %Y %H:%M:%S"), experiment, pp.pformat(parameter), str(exception)))
 
     msg['Subject'] = "Parameter Tunning Failed."
     msg['From'] = "azureuser@cloudymiao.cloudapp.net"

@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.externals.joblib import Parallel, delayed
 from scipy.optimize import minimize_scalar
 from parametertunning import gbdt_cross_validation_data, gbdt_training, mailsend, mailsendfail
 from setting import *
@@ -29,7 +30,7 @@ def main():
                 print("Prediction finished.\nFinding optimal threshold...")
 
                 def obj(y):
-                    return -valid_label[['user_id', 'label', 'pred_prob']].groupby('user_id').apply(lambda x: f1_score(x.label, x.pred_prob>y)).mean()
+                    return -np.mean(Parallel(n_jobs=4)(delayed(uf1score)(group, y) for _, group in valid_label[['user_id', 'label', 'pred_prob']].groupby('user_id')))
 
                 th = minimize_scalar(obj, bracket=(0.15, 0.2), method='brent', tol=1e-2)
                 print("Threshold found. {0}.".format(th.x))
