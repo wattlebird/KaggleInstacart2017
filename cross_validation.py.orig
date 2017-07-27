@@ -4,6 +4,9 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.externals.joblib import Parallel, delayed
 from scipy.optimize import minimize_scalar
 from parametertunning import gbdt_cross_validation_data, gbdt_training, mailsend, mailsendfail
+<<<<<<< HEAD
+from setting import *
+=======
 import os
 from azure.storage.blob import BlockBlobService, ContentSettings
 
@@ -25,6 +28,7 @@ title = "GDBT min_data_in_leaf tunning experiment"
 candidate_param = [50, 100, 200, 400, 800]
 block_blob_service = BlockBlobService(account_name=os.environ['AZURE_STORAGE_IKELY_ACCOUNT'], 
                                       account_key=os.environ['AZURE_STORAGE_IKELY_KEY'])
+>>>>>>> 2667d819438bb0de201c004493ec6af601a17aaf
 
 
 def main():

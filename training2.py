@@ -5,8 +5,23 @@ from sklearn.externals.joblib import Parallel, delayed
 import lightgbm as lgb
 from scipy.optimize import minimize_scalar
 from parametertunning import gbdt_cross_validation_data, gbdt_training
+<<<<<<< HEAD
 from datetime import datetime
 from setting import *
+=======
+
+params = {
+    'task': 'train',
+    'boosting_type': 'gbdt',
+    'objective': 'binary',
+    'metric': {'auc'},
+    'num_leaves': 224,
+    'feature_fraction': 0.9,
+    'bagging_fraction': 0.95,
+    'bagging_freq': 5,
+    'verbose': 0
+}
+>>>>>>> 2667d819438bb0de201c004493ec6af601a17aaf
 
 def main():
     thv = []
@@ -45,7 +60,7 @@ def main():
             uploadfile("debug_product_record_{0}.tsv".format(i), "debug_product_record_{0}.tsv".format(feature_name))
 
     print("Loading test data...")
-    test = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "test")
+    test = pd.read_hdf("/home/azureuser/Data/dataset.hdf", "test")
     test['aisle_id'] = test.aisle_id.astype('category')
     test['department_id'] = test.department_id.astype('category')
     test['order_dow'] = test.order_dow.astype('category')

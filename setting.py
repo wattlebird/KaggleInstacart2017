@@ -21,9 +21,9 @@ title = "GDBT bagging_fraction tunning experiment"
 candidate_param = [0.6, 0.7, 0.8, 0.9]
 file_service = FileService(account_name=os.environ['AZURE_STORAGE_IKELY_ACCOUNT'], 
                                       account_key=os.environ['AZURE_STORAGE_IKELY_KEY'])
-feature_list = ['user_nitems', 'user_norder', 'user_ndistinctitems',
-       'user_nritems', 'user_nrdistinctitems', 'user_interval',
-       'user_second_order_rate', 'user_nritem_ratio',
+feature_list = [#'user_nitems', 'user_norder', 'user_ndistinctitems',
+       #'user_nritems', 'user_nrdistinctitems', 'user_interval',
+       #'user_second_order_rate', 'user_nritem_ratio',
        'user_nrdistinctitem_ratio', 'user_nitem_per_order',
        'user_nritem_per_order', 'user_nritem_per_order_ratio',
        'user_lastorder_interval', 'user_lastorder_interval_ratio',
