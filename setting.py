@@ -8,16 +8,17 @@ params = {
     'boosting_type': 'gbdt',
     'objective': 'binary',
     'metric': {'auc'},
-    'num_leaves': 192,
+    'num_leaves': 224,
+    'min_data_in_leaf': 4500,
     'feature_fraction': 0.9,
     'bagging_fraction': 0.95,
     'bagging_freq': 5,
     'verbose': 0
 }
-data = "/mnt/d/Data/Instacart/"
-feature_name = "num_leaves"
-title = "GDBT num_leaves tunning experiment"
-candidate_param = [96]
+data = "/home/azureuser/Data/"
+feature_name = "bagging_fraction"
+title = "GDBT bagging_fraction tunning experiment"
+candidate_param = [0.6, 0.7, 0.8, 0.9]
 file_service = FileService(account_name=os.environ['AZURE_STORAGE_IKELY_ACCOUNT'], 
                                       account_key=os.environ['AZURE_STORAGE_IKELY_KEY'])
 feature_list = ['user_nitems', 'user_norder', 'user_ndistinctitems',
