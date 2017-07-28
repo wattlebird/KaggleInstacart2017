@@ -11,23 +11,22 @@ params = {
     'num_leaves': 224,
     'min_data_in_leaf': 4500,
     'feature_fraction': 0.9,
-    'bagging_fraction': 0.95,
-    'bagging_freq': 5,
+    'bagging_fraction': 1,
     'verbose': 0
 }
 data = "/home/azureuser/Data/"
-feature_name = "bagging_fraction"
-title = "GDBT bagging_fraction tunning experiment"
+feature_name = "feature_fraction"
+title = "GDBT feature_fraction tunning experiment"
 candidate_param = [0.6, 0.7, 0.8, 0.9]
 file_service = FileService(account_name=os.environ['AZURE_STORAGE_IKELY_ACCOUNT'], 
                                       account_key=os.environ['AZURE_STORAGE_IKELY_KEY'])
 feature_list = [#'user_nitems', 'user_norder', 'user_ndistinctitems',
        #'user_nritems', 'user_nrdistinctitems', 'user_interval',
        #'user_second_order_rate', 'user_nritem_ratio',
-       'user_nrdistinctitem_ratio', 'user_nitem_per_order',
-       'user_nritem_per_order', 'user_nritem_per_order_ratio',
-       'user_lastorder_interval', 'user_lastorder_interval_ratio',
-       'user_prod_lastorder_interval', 'user_prod_lastdays_interval',
+       #'user_nrdistinctitem_ratio', 'user_nitem_per_order',
+       #'user_nritem_per_order', 'user_nritem_per_order_ratio',
+       #'user_lastorder_interval', 'user_lastorder_interval_ratio',
+       #'user_prod_lastorder_interval', 'user_prod_lastdays_interval',
        'prod_norder', 'prod_nuser', 'prod_nrorder', 'prod_nruser',
        'prod_days_interval_avg', 'prod_order_interval_avg',
        'prod_second_order_ratio', 'prod_ruser_ratio', 'prod_rorder_ratio',
