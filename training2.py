@@ -45,7 +45,7 @@ def main():
             uploadfile("debug_product_record_{0}.tsv".format(i), "debug_product_record_{0}.tsv".format(feature_name))
 
     print("Loading test data...")
-    test = pd.read_hdf("/mnt/d/Data/Instacart/dataset.hdf", "test")
+    test = pd.read_hdf(data+"dataset.hdf", "test")
     test['aisle_id'] = test.aisle_id.astype('category')
     test['department_id'] = test.department_id.astype('category')
     test['order_dow'] = test.order_dow.astype('category')
