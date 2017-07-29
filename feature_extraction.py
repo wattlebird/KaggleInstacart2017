@@ -30,19 +30,50 @@ def generate_product_user_feature():
     rename(columns={'user_id': 'prod_nuser', 'order_id': 'prod_norder'})
     p2 = product[['product_id', 'user_id', 'order_id']][product.reordered==1].groupby(by='product_id').agg({'user_id': pd.Series.nunique, 'order_id': pd.Series.nunique}).\
     rename(columns={'user_id': 'prod_nruser', 'order_id': 'prod_nrorder'})
-    up1 = product[['product_id', 'user_id', 'interval_accu']].sort_values(by=['user_id', 'product_id', 'interval_accu'])
-    up1 = up1.groupby(by=['user_id', 'product_id'])['interval_accu'].agg({'user_prod_days_interval': avginterval})
-    up1 = up1[up1.user_prod_days_interval!=np.inf].reset_index()
-    p3 = up1[['product_id', 'user_prod_days_interval']].groupby(by='product_id')['user_prod_days_interval'].agg({'prod_days_interval_avg': 'mean'})
-    up2 = product[['product_id', 'user_id', 'order_number']].sort_values(by=['user_id', 'product_id', 'order_number'])
-    up2 = up2.groupby(by=['product_id', 'user_id'])['order_number'].agg({'user_prod_order_interval': avginterval})
-    up2 = up2[up2.user_prod_order_interval!=np.inf].reset_index()
-    p4 = up2[['product_id', 'user_prod_order_interval']].groupby(by='product_id')['user_prod_order_interval'].agg({'prod_order_interval_avg': 'mean'})
+
+    candidate_up = product[['product_id', 'user_id', 'order_time']].groupby(by=['product_id', 'user_id'])['order_time'].agg(['min', 'max', 'count'])
+    candidate_up['order_times'] = candidate_up['max']-candidate_up['min']
+    candidate_up = candidate_up.drop(['max', 'min'], axis=1).rename(columns={'count': 'user_prod_norder'})
+    up1 = pd.merge(product[['product_id', 'user_id', 'order_number', 'interval_accu']], candidate_up, \
+                left_on=['product_id', 'user_id'], right_index=True)
+    up11 = up1.groupby(by=['product_id', 'user_id'])['order_number'].agg(['min', 'max'])
+    up11['order_interval'] = up11['max']-up11['min']
+    up11.drop(['max', 'min'], axis=1, inplace=True)
+    up12 = up1.groupby(by=['product_id', 'user_id'])['interval_accu'].agg(['min', 'max'])
+    up12['days_interval'] = up12['max']-up12['min']
+    up12.drop(['max', 'min'], axis=1, inplace=True)
+    up1 = pd.merge(candidate_up, up11, left_index=True, right_index=True).merge(up12, left_index=True, right_index=True)
+    up1['user_prod_order_interval'] = up1.order_interval/up1.order_times
+    up1['user_prod_days_interval'] = up1.days_interval/up1.order_times
+    up1.drop(['order_times', 'order_interval', 'days_interval'], axis=1, inplace=True)
+
+    u1 = product[['user_id', 'order_id']].groupby(by='user_id')['order_id'].agg({
+        'user_norder': pd.Series.nunique
+    })
+    up2 = product[['product_id', 'user_id', 'order_number']].groupby(by=['product_id', 'user_id'])['order_number'].agg({
+        'user_prod_first_order_time': 'min',
+        'user_prod_norder': 'count'
+    })
+    up2 = pd.merge(up2.reset_index(level=0), u1, left_index=True, right_index=True).reset_index()
+    up2['user_prod_reorder_rate'] = (up2.user_prod_norder-1)/(up2.user_norder-up2.user_prod_first_order_time)
+    up2 = up2.drop(['user_prod_first_order_time', 'user_norder', 'user_prod_norder'], axis=1).fillna(0)
+    u2 = up1.reset_index()[['user_id', 'user_prod_norder']].groupby(by='user_id')['user_prod_norder'].agg({'user_avg_prod_norder': 'mean'})
+    u3 = up1.reset_index()[['user_id', 'user_prod_order_interval', 'user_prod_days_interval']].groupby(by='user_id').\
+    agg('mean')
+    u3 = u3.rename(columns={'user_prod_order_interval': 'user_order_interval_avg', 
+                    'user_prod_days_interval': 'user_days_interval_avg'})
+    u1 = pd.concat([u1, u2, u3], axis=1)
+    p3 = up1.reset_index()[['product_id', 'user_prod_days_interval']].groupby(by='product_id')['user_prod_days_interval'].agg({'prod_days_interval_avg': 'mean'})
+    p4 = up1.reset_index()[['product_id', 'user_prod_order_interval']].groupby(by='product_id')['user_prod_order_interval'].agg({'prod_order_interval_avg': 'mean'})
+    p3 = pd.concat([p3, p4], axis=1)
+    up1 = pd.merge(up1.reset_index(level=0), u1, left_index=True, right_index=True).reset_index().set_index('product_id').\
+    merge(p3, left_index=True, right_index=True).reset_index()
+    up1 = up1.merge(up2, on=['user_id', 'product_id'])
+
     p5 = product[['product_id', 'order_time']].groupby(by='product_id')['order_time'].agg({"prod_second_order_ratio": second_order_ratio})
 
     product_feature = p1.merge(p2, how='left', left_index=True, right_index=True).\
     merge(p3, how='left', left_index=True, right_index=True).\
-    merge(p4, how='left', left_index=True, right_index=True).\
     merge(p5, left_index=True, right_index=True)
 
     product_feature.prod_nruser = product_feature.prod_nruser.fillna(0)
@@ -55,6 +86,48 @@ def generate_product_user_feature():
     product_feature['prod_order_per_user'] = product_feature.prod_norder/product_feature.prod_nuser
     product_feature.prod_rorder_per_ruser = product_feature.prod_rorder_per_ruser.fillna(0)
     del p1, p2, p3, p4, p5
+
+    # user_norder, user_nitems
+    u0 = product[['user_id', 'order_id']].groupby(by='user_id')['order_id'].agg({'user_nitems': 'count'})
+    # user_ndistinctitems
+    u2 = product[['user_id', 'product_id']].groupby(by='user_id')['product_id'].agg({
+        'user_ndistinctitems': pd.Series.nunique
+    })
+    # user_nritems, user_nrdistinctitems
+    u3 = product[['user_id', 'product_id']][product.reordered==1].groupby(by='user_id')['product_id'].agg({
+        'user_nritems': 'count',
+        'user_nrdistinctitems': pd.Series.nunique
+    })
+    # user_interval
+    u4 = product[['user_id', 'order_id', 'days_since_prior_order']][~product.days_since_prior_order.isnull()].drop_duplicates().\
+    drop(['order_id'], axis=1).groupby(by='user_id')['days_since_prior_order'].agg({
+        'user_interval': 'mean'
+    })
+    # user_second_order_rate
+    u5 = product[['user_id', 'order_time']].groupby(by='user_id')['order_time'].agg({"user_second_order_rate": second_order_ratio})
+    # user_avg_reorder_ratio
+    u6 = product[product['order_number']!=1][['user_id', 'order_id', 'reordered']].\
+    groupby(by=['user_id', 'order_id'])['reordered'].agg({
+        'dnu': 'count',
+        'nu': 'sum'
+    })
+    u6['reorder_portion'] = u6.nu/u6.dnu
+    u6 = u6.reset_index().drop(['order_id', 'dnu', 'nu'], axis=1).groupby(by='user_id')['reorder_portion'].agg({
+        'user_avg_reorder_ratio': 'mean'
+    })
+
+    user_feature = pd.concat([u0, u1], axis=1).merge(u2, left_index=True, right_index=True).\
+    merge(u3, how='left', left_index=True, right_index=True).\
+    merge(u4, left_index=True, right_index=True).\
+    merge(u5, left_index=True, right_index=True).\
+    merge(u6, left_index=True, right_index=True).fillna(0)
+    del u0, u1, u2, u3, u4, u5, u6
+
+    user_feature['user_nritem_ratio'] = user_feature.user_nritems/user_feature.user_nitems
+    user_feature['user_nrdistinctitem_ratio'] = user_feature.user_nrdistinctitems/user_feature.user_ndistinctitems
+    user_feature['user_nitem_per_order'] = user_feature.user_nitems/user_feature.user_norder
+    user_feature['user_nritem_per_order'] = user_feature.user_nritems/(user_feature.user_norder-1)
+    user_feature['user_nritem_per_order_ratio'] = user_feature.user_nritem_per_order/user_feature.user_nitem_per_order
 
     up3 = product[['user_id', 'product_id', 'reordered']].groupby(by=['product_id', 'user_id'])['reordered'].agg({
         'user_prod_reordered': 'max'
