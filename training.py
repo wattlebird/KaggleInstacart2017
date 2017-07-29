@@ -18,20 +18,6 @@ def f1(preds, train_data):
     Yt = train_data.get_label()
     return 'f1', f1_score(Yt, preds>TH), True
 
-params = {
-    'task': 'train',
-    'boosting_type': 'gbdt',
-    'objective': 'binary',
-    'metric': {'auc'},
-    'num_leaves': 192,
-    'min_data_in_leaf': 200,
-    'max_depth': 11,
-    'feature_fraction': 0.9,
-    'bagging_fraction': 0.95,
-    'bagging_freq': 5,
-    'verbose': 1
-}
-
 X = lgb.Dataset(train.drop('label', axis=1), train['label'])
 
 gbdt = lgb.train(params, X, num_boost_round=160)
