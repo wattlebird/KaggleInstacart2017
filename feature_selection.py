@@ -2,6 +2,9 @@ import numpy as np
 import pandas as pd
 from parametertunning import gbdt_cross_validation_data, gbdt_training, mailsend_feature_selection, mailsendfail
 from setting import *
+import gc
+
+gc.enable()
 
 
 def main():
@@ -16,8 +19,10 @@ def main():
             model = gbdt_training(params, train, valid, verbose=False)
             print("\tTraining finished.")
             temp[i] = model.best_score['valid_1']['auc']
+            #model.save_model("/tmp/tmpmodel");
         aucv.append(np.mean(temp))
         print("Baseline AUC: {0}.".format(aucv[-1]))
+        gc.collect()
 
         print("Feature dropping round.")
         for singlefeature in feature_list:
@@ -28,9 +33,10 @@ def main():
                 model = gbdt_training(params, train.drop(singlefeature, axis=1), valid.drop(singlefeature, axis=1), verbose=False)
                 print("\t\tTraining finished.")
                 temp[i] = model.best_score['valid_1']['auc']
+                #model.save_model("/tmp/tmpmodel");
             aucv.append(np.mean(temp))
             print("\tBaseline AUC: {0}.".format(aucv[-1]))
-        
+            gc.collect()
         mailsend_feature_selection(feature_list, aucv, params)
     except Exception as e:
         try:
