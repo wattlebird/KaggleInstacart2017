@@ -225,85 +225,35 @@ def generate_time_features():
     product = pd.merge(priors, orders, on='order_id').sort_values(by=['user_id', 'order_number', 'product_id']).reset_index(drop=True)
     product.drop('eval_set', axis=1, inplace=True)
 
-    t1 = product[['product_id', 'order_hour_of_day', 'order_id']].groupby(by=['product_id', 'order_hour_of_day']).agg('count').reset_index()
-    t1 = t1.rename(columns={'order_id': 'hour_cnt'})
-    t11 = t1.groupby(by='product_id')['hour_cnt'].agg({'prod_hour_cnt': 'sum'}).reset_index()
-    t12 = t1.groupby(by='order_hour_of_day')['hour_cnt'].agg({'hour_prod_cnt': 'sum'}).reset_index()
-    t1 = t1.merge(t11, on='product_id').merge(t12, on='order_hour_of_day')
-    t1['prod_hour_prob']=t1.hour_cnt/t1.prod_hour_cnt
-    t1['hour_prod_prob']=t1.hour_cnt/t1.hour_prod_cnt
-    t1.drop(['hour_cnt', 'prod_hour_cnt', 'hour_prod_cnt'], axis=1, inplace=True)
-    del t11, t12
+    hour_cnt = product[['order_hour_of_day', 'order_id']].groupby(by='order_hour_of_day')['order_id'].\
+    agg({'hour_cnt': 'count'})
+    prod_cnt = product[['product_id', 'order_id']].groupby(by='product_id')['order_id'].agg({'prod_cnt':'count'})
+    week_cnt = product[['order_dow', 'order_id']].groupby(by='order_dow')['order_id'].agg({'week_cnt':'count'})
+    prod_hour_cnt = product[['product_id', 'order_hour_of_day', 'order_id']].groupby(by=['product_id', 'order_hour_of_day'])['order_id'].\
+    agg({'prod_hour_cnt': 'count'})
+    prod_week_cnt = product[['product_id', 'order_dow', 'order_id']].groupby(by=['product_id', 'order_dow'])['order_id'].\
+    agg({'prod_week_cnt': 'count'})
 
-    t2 = product[['product_id', 'order_dow', 'order_id']].groupby(by=['product_id', 'order_dow']).agg('count').reset_index()
-    t2 = t2.rename(columns={'order_id': 'week_cnt'})
-    t21 = t2.groupby(by='product_id')['week_cnt'].agg({'prod_week_cnt': 'sum'}).reset_index()
-    t22 = t2.groupby(by='order_dow')['week_cnt'].agg({'week_prod_cnt': 'sum'}).reset_index()
-    t2 = t2.merge(t21, on='product_id').merge(t22, on='order_dow')
-    t2['prod_week_prob']=t2.week_cnt/t2.prod_week_cnt
-    t2['week_prod_prob']=t2.week_cnt/t2.week_prod_cnt
-    t2.drop(['week_cnt', 'prod_week_cnt', 'week_prod_cnt'], axis=1, inplace=True)
-    del t22, t21
+    prod_rcnt = product[product.reordered==1][['product_id', 'order_id']].groupby(by='product_id')['order_id'].\
+    agg({'prod_rcnt':'count'})
+    prod_hour_rcnt = product[product.reordered==1][['product_id', 'order_hour_of_day', 'order_id']].\
+    groupby(by=['product_id', 'order_hour_of_day'])['order_id'].agg({'prod_hour_rcnt': 'count'})
+    prod_week_rcnt = product[product.reordered==1][['product_id', 'order_dow', 'order_id']].\
+    groupby(by=['product_id', 'order_dow'])['order_id'].agg({'prod_week_rcnt': 'count'})
 
-    t3 = product[['user_id', 'order_hour_of_day', 'order_id']][product.reordered==1].\
-    groupby(by=['user_id', 'order_hour_of_day'])['order_id'].\
-    agg({'user_hour_count': 'count'}).reset_index()
-    t31 = product[['user_id', 'order_hour_of_day', 'order_id']][product.reordered==1].\
-    groupby(by=['user_id'])['order_id'].\
-    agg({'user_count': 'count'}).reset_index()
-    t3 = t3.merge(t31, on='user_id')
-    t3['hour_user_reorder_prob'] = (t3.user_hour_count+1)/(t3.user_count+24)
-    t3.drop(['user_hour_count', 'user_count'], axis=1, inplace=True)
+    user_rcnt = product[product.reordered==1][['user_id', 'order_id']].groupby(by='user_id')['order_id'].\
+    agg({'user_rcnt':'count'})
+    user_hour_rcnt = product[product.reordered==1][['user_id', 'order_hour_of_day', 'order_id']].\
+    groupby(by=['user_id', 'order_hour_of_day'])['order_id'].agg({'user_hour_rcnt': 'count'})
+    user_week_rcnt = product[product.reordered==1][['user_id', 'order_dow', 'order_id']].\
+    groupby(by=['user_id', 'order_dow'])['order_id'].agg({'user_week_rcnt': 'count'})
 
-    t4 = product[['user_id', 'order_dow', 'order_id']][product.reordered==1].\
-    groupby(by=['user_id', 'order_dow'])['order_id'].\
-    agg({'user_week_count': 'count'}).reset_index()
-    t41 = product[['user_id', 'order_dow', 'order_id']][product.reordered==1].\
-    groupby(by=['user_id'])['order_id'].\
-    agg({'user_count': 'count'}).reset_index()
-    t4 = t4.merge(t41, on='user_id')
-    t4['week_user_reorder_prob'] = (t4.user_week_count+1)/(t4.user_count+7)
-    t4.drop(['user_week_count', 'user_count'], axis=1, inplace=True)
-
-    t5 = product[['product_id', 'order_hour_of_day', 'order_id']][product.reordered==1].\
-    groupby(by=['product_id', 'order_hour_of_day'])['order_id'].\
-    agg({'prod_hour_count': 'count'}).reset_index()
-    t51 = product[['product_id', 'order_hour_of_day', 'order_id']][product.reordered==1].\
-    groupby(by=['product_id'])['order_id'].\
-    agg({'prod_count': 'count'}).reset_index()
-    t5 = t5.merge(t51, on='product_id')
-    t5['hour_prod_reorder_prob'] = (t5.prod_hour_count+1)/(t5.prod_count+24)
-    t5.drop(['prod_hour_count', 'prod_count'], axis=1, inplace=True)
-
-    t6 = product[['product_id', 'order_dow', 'order_id']][product.reordered==1].\
-    groupby(by=['product_id', 'order_dow'])['order_id'].\
-    agg({'prod_week_count': 'count'}).reset_index()
-    t61 = product[['product_id', 'order_dow', 'order_id']][product.reordered==1].\
-    groupby(by=['product_id'])['order_id'].\
-    agg({'prod_count': 'count'}).reset_index()
-    t6 = t6.merge(t61, on='product_id')
-    t6['week_prod_reorder_prob'] = (t6.prod_week_count+1)/(t6.prod_count+7)
-    t6.drop(['prod_week_count', 'prod_count'], axis=1, inplace=True)
-
-    t7 = product[['user_id', 'product_id', 'order_hour_of_day', 'order_id']][product.reordered==1].\
-    groupby(by=['user_id', 'product_id', 'order_hour_of_day'])['order_id'].\
-    agg({'user_prod_hour_count': 'count'}).reset_index()
-    t71 = product[['user_id', 'product_id', 'order_hour_of_day', 'order_id']][product.reordered==1].\
-    groupby(by=['user_id', 'product_id'])['order_id'].\
-    agg({'user_prod_count': 'count'}).reset_index()
-    t7 = t7.merge(t71, on=['user_id', 'product_id'])
-    t7['hour_user_prod_reorder_prob'] = (t7.user_prod_hour_count+1)/(t7.user_prod_count+24)
-    t7.drop(['user_prod_hour_count', 'user_prod_count'], axis=1, inplace=True)
-
-    t8 = product[['user_id', 'product_id', 'order_dow', 'order_id']][product.reordered==1].\
-    groupby(by=['user_id', 'product_id', 'order_dow'])['order_id'].\
-    agg({'user_prod_week_count': 'count'}).reset_index()
-    t81 = product[['user_id', 'product_id', 'order_dow', 'order_id']][product.reordered==1].\
-    groupby(by=['user_id', 'product_id'])['order_id'].\
-    agg({'user_prod_count': 'count'}).reset_index()
-    t8 = t8.merge(t81, on=['user_id', 'product_id'])
-    t8['week_user_prod_reorder_prob'] = (t8.user_prod_week_count+1)/(t8.user_prod_count+7)
-    t8.drop(['user_prod_week_count', 'user_prod_count'], axis=1, inplace=True)
+    prod_user_rcnt = product[product.reordered==1][['product_id', 'user_id', 'order_id']].groupby(by=['product_id', 'user_id'])['order_id'].\
+    agg({'prod_user_rcnt':'count'})
+    prod_user_hour_rcnt = product[product.reordered==1][['product_id', 'user_id', 'order_hour_of_day', 'order_id']].\
+    groupby(by=['product_id', 'user_id', 'order_hour_of_day'])['order_id'].agg({'prod_user_hour_rcnt': 'count'})
+    prod_user_week_rcnt = product[product.reordered==1][['product_id', 'user_id', 'order_dow', 'order_id']].\
+    groupby(by=['product_id', 'user_id', 'order_dow'])['order_id'].agg({'prod_user_week_rcnt': 'count'})
 
     train = pd.read_csv(data+"train.tsv", sep='\t', dtype={
         'order_id': np.int32,
@@ -311,41 +261,69 @@ def generate_time_features():
         'product_id': np.uint16,
         'label': np.int8
     }, usecols=['order_id', 'user_id', 'product_id'], engine='c')
+
     train = train.merge(orders[['order_id', 'order_dow', 'order_hour_of_day']][orders.eval_set=='train'], on='order_id').\
-            merge(t1, how='left', on=['product_id', 'order_hour_of_day']).\
-            merge(t2, how='left', on=['product_id', 'order_dow']).fillna(0).\
-            merge(t3, how='left', on=['user_id', 'order_hour_of_day']).\
-            merge(t4, how='left', on=['user_id', 'order_dow']).\
-            merge(t5, how='left', on=['product_id', 'order_hour_of_day']).\
-            merge(t6, how='left', on=['product_id', 'order_dow']).\
-            merge(t7, how='left', on=['user_id', 'product_id', 'order_hour_of_day']).\
-            merge(t8, how='left', on=['user_id', 'product_id', 'order_dow'])
-    train['hour_user_reorder_prob'] = train['hour_user_reorder_prob'].fillna(1/24)
-    train['week_user_reorder_prob'] = train['week_user_reorder_prob'].fillna(1/7)
-    train['hour_prod_reorder_prob'] = train['hour_prod_reorder_prob'].fillna(1/24)
-    train['week_prod_reorder_prob'] = train['week_prod_reorder_prob'].fillna(1/7)
-    train['hour_user_prod_reorder_prob'] = train['hour_user_prod_reorder_prob'].fillna(1/24)
-    train['week_user_prod_reorder_prob'] = train['week_user_prod_reorder_prob'].fillna(1/7)
+    merge(hour_cnt, how='left', left_on='order_hour_of_day', right_index=True).\
+    merge(week_cnt, how='left', left_on='order_dow', right_index=True).\
+    merge(prod_cnt, how='left', left_on='product_id', right_index=True).fillna(0).\
+    merge(prod_hour_cnt, how='left', left_on=['product_id', 'order_hour_of_day'], right_index=True).fillna(0).\
+    merge(prod_week_cnt, how='left', left_on=['product_id', 'order_dow'], right_index=True).fillna(0).\
+    merge(prod_rcnt, how='left', left_on='product_id', right_index=True).fillna(0).\
+    merge(prod_hour_rcnt, how='left', left_on=['product_id', 'order_hour_of_day'], right_index=True).fillna(0).\
+    merge(prod_week_rcnt, how='left', left_on=['product_id', 'order_dow'], right_index=True).fillna(0).\
+    merge(user_rcnt, how='left', left_on='user_id', right_index=True).fillna(0).\
+    merge(user_hour_rcnt, how='left', left_on=['user_id', 'order_hour_of_day'], right_index=True).fillna(0).\
+    merge(user_week_rcnt, how='left', left_on=['user_id', 'order_dow'], right_index=True).fillna(0).\
+    merge(prod_user_rcnt, how='left', left_on=['product_id', 'user_id'], right_index=True).fillna(0).\
+    merge(prod_user_hour_rcnt, how='left', left_on=['product_id', 'user_id', 'order_hour_of_day'], right_index=True).fillna(0).\
+    merge(prod_user_week_rcnt, how='left', left_on=['product_id', 'user_id', 'order_dow'], right_index=True).fillna(0)
+    train['prod_hour_prob'] = train.prod_hour_cnt / train.hour_cnt
+    train['prod_week_prob'] = train.prod_week_cnt / train.week_cnt
+    train['week_prod_prob'] = (train.prod_week_cnt+1) / (train.prod_cnt+24)
+    train['hour_prod_prob'] = (train.prod_hour_cnt+1) / (train.prod_cnt+7)
+    train['hour_user_reorder_prob'] = (train.user_hour_rcnt+1) / (train.user_rcnt+24)
+    train['week_user_reorder_prob'] = (train.user_week_rcnt+1) / (train.user_rcnt+7)
+    train['hour_prod_reorder_prob'] = (train.prod_hour_rcnt+1) / (train.prod_rcnt+24)
+    train['week_prod_reorder_prob'] = (train.prod_week_rcnt+1) / (train.prod_rcnt+7)
+    train['hour_prod_user_reorder_prob'] = (train.prod_user_hour_rcnt+1) / (train.prod_user_rcnt+24)
+    train['week_prod_user_reorder_prob'] = (train.prod_user_week_rcnt+1) / (train.prod_user_rcnt+7)
+    train.drop(['hour_cnt', 'week_cnt', 'prod_cnt', 'prod_hour_cnt', 'prod_week_cnt', 'prod_rcnt', 'prod_hour_rcnt', 
+           'prod_week_rcnt', 'user_rcnt', 'user_hour_rcnt', 'user_week_rcnt', 'prod_user_rcnt', 'prod_user_hour_rcnt',
+           'prod_user_week_rcnt'], axis=1, inplace=True)
 
     test = pd.read_csv(data+"test.tsv", sep='\t', dtype={
         'order_id': np.int32,
         'user_id': np.int32,
         'product_id': np.uint16
     })
-    test = test.merge(orders[['order_id', 'order_dow', 'order_hour_of_day']][orders.eval_set=='test'], on='order_id').merge(t1, how='left', on=['product_id', 'order_hour_of_day']).\
-    merge(t2, how='left', on=['product_id', 'order_dow']).fillna(0).\
-    merge(t3, how='left', on=['user_id', 'order_hour_of_day']).\
-    merge(t4, how='left', on=['user_id', 'order_dow']).\
-    merge(t5, how='left', on=['product_id', 'order_hour_of_day']).\
-    merge(t6, how='left', on=['product_id', 'order_dow']).\
-    merge(t7, how='left', on=['user_id', 'product_id', 'order_hour_of_day']).\
-    merge(t8, how='left', on=['user_id', 'product_id', 'order_dow'])
-    test['hour_user_reorder_prob'] = test['hour_user_reorder_prob'].fillna(1/24)
-    test['week_user_reorder_prob'] = test['week_user_reorder_prob'].fillna(1/7)
-    test['hour_prod_reorder_prob'] = test['hour_prod_reorder_prob'].fillna(1/24)
-    test['week_prod_reorder_prob'] = test['week_prod_reorder_prob'].fillna(1/7)
-    test['hour_user_prod_reorder_prob'] = test['hour_user_prod_reorder_prob'].fillna(1/24)
-    test['week_user_prod_reorder_prob'] = test['week_user_prod_reorder_prob'].fillna(1/7)
+    test = test.merge(orders[['order_id', 'order_dow', 'order_hour_of_day']][orders.eval_set=='test'], on='order_id').\
+    merge(hour_cnt, how='left', left_on='order_hour_of_day', right_index=True).\
+    merge(week_cnt, how='left', left_on='order_dow', right_index=True).\
+    merge(prod_cnt, how='left', left_on='product_id', right_index=True).fillna(0).\
+    merge(prod_hour_cnt, how='left', left_on=['product_id', 'order_hour_of_day'], right_index=True).fillna(0).\
+    merge(prod_week_cnt, how='left', left_on=['product_id', 'order_dow'], right_index=True).fillna(0).\
+    merge(prod_rcnt, how='left', left_on='product_id', right_index=True).fillna(0).\
+    merge(prod_hour_rcnt, how='left', left_on=['product_id', 'order_hour_of_day'], right_index=True).fillna(0).\
+    merge(prod_week_rcnt, how='left', left_on=['product_id', 'order_dow'], right_index=True).fillna(0).\
+    merge(user_rcnt, how='left', left_on='user_id', right_index=True).fillna(0).\
+    merge(user_hour_rcnt, how='left', left_on=['user_id', 'order_hour_of_day'], right_index=True).fillna(0).\
+    merge(user_week_rcnt, how='left', left_on=['user_id', 'order_dow'], right_index=True).fillna(0).\
+    merge(prod_user_rcnt, how='left', left_on=['product_id', 'user_id'], right_index=True).fillna(0).\
+    merge(prod_user_hour_rcnt, how='left', left_on=['product_id', 'user_id', 'order_hour_of_day'], right_index=True).fillna(0).\
+    merge(prod_user_week_rcnt, how='left', left_on=['product_id', 'user_id', 'order_dow'], right_index=True).fillna(0)
+    test['prod_hour_prob'] = test.prod_hour_cnt / test.hour_cnt
+    test['prod_week_prob'] = test.prod_week_cnt / test.week_cnt
+    test['week_prod_prob'] = (test.prod_week_cnt+1) / (test.prod_cnt+24)
+    test['hour_prod_prob'] = (test.prod_hour_cnt+1) / (test.prod_cnt+7)
+    test['hour_user_reorder_prob'] = (test.user_hour_rcnt+1) / (test.user_rcnt+24)
+    test['week_user_reorder_prob'] = (test.user_week_rcnt+1) / (test.user_rcnt+7)
+    test['hour_prod_reorder_prob'] = (test.prod_hour_rcnt+1) / (test.prod_rcnt+24)
+    test['week_prod_reorder_prob'] = (test.prod_week_rcnt+1) / (test.prod_rcnt+7)
+    test['hour_prod_user_reorder_prob'] = (test.prod_user_hour_rcnt+1) / (test.prod_user_rcnt+24)
+    test['week_prod_user_reorder_prob'] = (test.prod_user_week_rcnt+1) / (test.prod_user_rcnt+7)
+    test.drop(['hour_cnt', 'week_cnt', 'prod_cnt', 'prod_hour_cnt', 'prod_week_cnt', 'prod_rcnt', 'prod_hour_rcnt', 
+           'prod_week_rcnt', 'user_rcnt', 'user_hour_rcnt', 'user_week_rcnt', 'prod_user_rcnt', 'prod_user_hour_rcnt',
+           'prod_user_week_rcnt'], axis=1, inplace=True)
 
     return train, test
 
@@ -375,25 +353,22 @@ def generate_id_features():
 
     product = pd.merge(priors, orders, on='order_id').sort_values(by=['user_id', 'order_number', 'product_id']).reset_index(drop=True)
     product.drop('eval_set', axis=1, inplace=True)
+    product = product.merge(product_detail, on='product_id')
 
-    d1 = pd.merge(product_detail, product[['product_id', 'order_id']][product.reordered==1], on='product_id').groupby(by=['product_id', 'aisle_id', 'department_id']).\
-    agg({'order_id': 'count'}).reset_index()
-    d11 = d1[['aisle_id', 'order_id']].groupby(by='aisle_id')['order_id'].agg({'aisle_count': 'sum'})
-    d12 = d1[['department_id', 'order_id']].groupby(by='department_id')['order_id'].agg({'department_count': 'sum'})
-    d1 = d1.merge(d11, left_on='aisle_id', right_index=True).merge(d12, left_on='department_id', right_index=True)
-    d1['prod_aisle_reorder_prob'] = d1.order_id/d1.aisle_count
-    d1['prod_department_reorder_prob'] = d1.order_id/d1.department_count
-    d1.drop(['order_id', 'aisle_count', 'department_count'], axis=1, inplace=True)
+    user_aisle_rcnt = product[product.reordered==1][['user_id', 'aisle_id', 'order_id']].groupby(by=['user_id', 'aisle_id'])['order_id'].\
+    agg({'user_aisle_rcnt': 'count'})
+    user_dep_rcnt = product[product.reordered==1][['user_id', 'department_id', 'order_id']].\
+    groupby(by=['user_id', 'department_id'])['order_id'].agg({'user_dep_rcnt': 'count'})
+    user_rcnt = product[product.reordered==1][['user_id', 'order_id']].groupby(by='user_id')['order_id'].agg({'user_rcnt': 'count'})
 
-    d = pd.merge(product_detail, product[['product_id', 'user_id', 'order_id']][product.reordered==1], on='product_id')
-
-    d2 = d[['user_id', 'order_id']].groupby(by='user_id')['order_id'].agg({'user_rorder_cnt': 'count'}).reset_index()
-    d21 = d[['user_id', 'aisle_id', 'order_id']].groupby(by=['user_id', 'aisle_id'])['order_id'].agg({'aisle_count': 'count'}).reset_index()
-    d22 = d[['user_id', 'department_id', 'order_id']].groupby(by=['user_id', 'department_id'])['order_id'].agg({'department_count': 'count'}).reset_index()
-    d2 = d2.merge(d21, on='user_id').merge(d22, on='user_id')
-    d2['aisle_user_reorder_prob'] = (d2.aisle_count+1)/(d2.user_rorder_cnt+134)
-    d2['department_user_reorder_prob'] = (d2.department_count+1)/(d2.user_rorder_cnt+21)
-    d2.drop(['user_rorder_cnt', 'aisle_count', 'department_count'], axis=1, inplace=True)
+    prod_aisle_rcnt = product[product.reordered==1][['product_id', 'aisle_id', 'order_id']].groupby(by=['product_id', 'aisle_id'])['order_id'].\
+    agg({'prod_aisle_rcnt': 'count'})
+    prod_dep_rcnt = product[product.reordered==1][['product_id', 'department_id', 'order_id']].\
+    groupby(by=['product_id', 'department_id'])['order_id'].agg({'prod_dep_rcnt': 'count'})
+    aisle_cnt = product[product.reordered==1][['aisle_id', 'order_id']].groupby(by='aisle_id')['order_id'].\
+    agg({'aisle_cnt': 'count'})
+    dep_cnt = product[product.reordered==1][['department_id', 'order_id']].groupby(by='department_id')['order_id'].\
+    agg({'dep_cnt': 'count'})
 
     train = pd.read_csv(data+"train.tsv", sep='\t', dtype={
         'order_id': np.int32,
@@ -401,20 +376,39 @@ def generate_id_features():
         'product_id': np.uint16,
         'label': np.int8
     }, usecols=['order_id', 'user_id', 'product_id'], engine='c')
-    train = train.merge(product_detail, on='product_id').merge(d1, how='left', on=['product_id', 'aisle_id', 'department_id']).fillna(0).\
-    merge(d2, how='left', on=['user_id', 'aisle_id', 'department_id'])
-    train['aisle_user_reorder_prob'] = train['aisle_user_reorder_prob'].fillna(1/134)
-    train['department_user_reorder_prob'] = train['department_user_reorder_prob'].fillna(1/21)
+
+    train = train.merge(product_detail, on='product_id').\
+    merge(user_aisle_rcnt, how='left', left_on=['user_id', 'aisle_id'], right_index=True).fillna(0).\
+    merge(user_dep_rcnt, how='left', left_on=['user_id', 'department_id'], right_index=True).fillna(0).\
+    merge(user_rcnt, how='left', left_on='user_id', right_index=True).fillna(0).\
+    merge(prod_aisle_rcnt, how='left', left_on=['product_id', 'aisle_id'], right_index=True).fillna(0).\
+    merge(prod_dep_rcnt, how='left', left_on=['product_id', 'department_id'], right_index=True).fillna(0).\
+    merge(aisle_cnt, how='left', left_on='aisle_id', right_index=True).fillna(0).\
+    merge(dep_cnt, how='left', left_on='department_id', right_index=True).fillna(0)
+    train['aisle_user_reorder_prob'] = (train.user_aisle_rcnt+1) / (train.user_rcnt+134)
+    train['dep_user_reorder_prob'] = (train.user_dep_rcnt+1) / (train.user_rcnt+21)
+    train['prod_aisle_reorder_prob'] = train.prod_aisle_rcnt / train.aisle_cnt
+    train['prod_dep_reorder_prob'] = train.prod_dep_rcnt / train.dep_cnt
+    train.drop(['user_aisle_rcnt', 'user_dep_rcnt', 'user_rcnt', 'prod_aisle_rcnt', 'prod_dep_rcnt', 'aisle_cnt', 'dep_cnt'], axis=1, inplace=True)
 
     test = pd.read_csv(data+"test.tsv", sep='\t', dtype={
         'order_id': np.int32,
         'user_id': np.int32,
         'product_id': np.uint16
     })
-    test = test.merge(product_detail, on='product_id').merge(d1, how='left', on=['product_id', 'aisle_id', 'department_id']).fillna(0).\
-    merge(d2, how='left', on=['user_id', 'aisle_id', 'department_id'])
-    test['aisle_user_reorder_prob'] = test['aisle_user_reorder_prob'].fillna(1/134)
-    test['department_user_reorder_prob'] = test['department_user_reorder_prob'].fillna(1/21)
+    test = test.merge(product_detail, on='product_id').\
+    merge(user_aisle_rcnt, how='left', left_on=['user_id', 'aisle_id'], right_index=True).fillna(0).\
+    merge(user_dep_rcnt, how='left', left_on=['user_id', 'department_id'], right_index=True).fillna(0).\
+    merge(user_rcnt, how='left', left_on='user_id', right_index=True).fillna(0).\
+    merge(prod_aisle_rcnt, how='left', left_on=['product_id', 'aisle_id'], right_index=True).fillna(0).\
+    merge(prod_dep_rcnt, how='left', left_on=['product_id', 'department_id'], right_index=True).fillna(0).\
+    merge(aisle_cnt, how='left', left_on='aisle_id', right_index=True).fillna(0).\
+    merge(dep_cnt, how='left', left_on='department_id', right_index=True).fillna(0)
+    test['aisle_user_reorder_prob'] = (test.user_aisle_rcnt+1) / (test.user_rcnt+134)
+    test['dep_user_reorder_prob'] = (test.user_dep_rcnt+1) / (test.user_rcnt+21)
+    test['prod_aisle_reorder_prob'] = test.prod_aisle_rcnt / test.aisle_cnt
+    test['prod_dep_reorder_prob'] = test.prod_dep_rcnt / test.dep_cnt
+    test.drop(['user_aisle_rcnt', 'user_dep_rcnt', 'user_rcnt', 'prod_aisle_rcnt', 'prod_dep_rcnt', 'aisle_cnt', 'dep_cnt'], axis=1, inplace=True)
 
     return train, test
 
