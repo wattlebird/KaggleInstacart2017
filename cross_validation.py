@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 from sklearn.externals.joblib import Parallel, delayed
 from scipy.optimize import minimize_scalar
-from parametertunning import gbdt_cross_validation_data_debug, gbdt_training, mailsend, mailsendfail
+from parametertunning import gbdt_cross_validation_data, gbdt_training, mailsend, mailsendfail
 from setting import *
 
 
@@ -20,7 +20,7 @@ def main():
             print("{0} parameters to be tunned.".format(len(candidate_param)))
 
         
-            for i, (train, valid, valid_label) in enumerate(gbdt_cross_validation_data_debug()):
+            for i, (train, valid, valid_label) in enumerate(gbdt_cross_validation_data()):
                 print("New iteration {0}, parameters: {1}".format(i+1, params))
                 print("Start training...")
                 model = gbdt_training(params, train, valid, verbose=False)

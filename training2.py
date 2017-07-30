@@ -43,6 +43,8 @@ def main():
             # since the file is very big one may upload it to azure 
             uploadfile("debug_{0}.tsv".format(i), "debug_{0}.tsv".format(feature_name))
             uploadfile("debug_product_record_{0}.tsv".format(i), "debug_product_record_{0}.tsv".format(feature_name))
+            model.save_model("/tmp/model.txt")
+            uploadfile("/tmp/model.txt", "model_{0}_0.txt".format(feature_name))
 
     print("Loading test data...")
     test = pd.read_hdf(data+"dataset.hdf", "test")

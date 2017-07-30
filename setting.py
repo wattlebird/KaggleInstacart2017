@@ -10,14 +10,14 @@ params = {
     'metric': {'auc'},
     'num_leaves': 224,
     'min_data_in_leaf': 4500,
-    'feature_fraction': 0.9,
+    'feature_fraction': 0.7,
     'bagging_fraction': 1,
     'verbose': 0
 }
-data = "/mnt/d/Data/Instacart/"
-feature_name = "feature_fraction"
-title = "GDBT feature_fraction tunning experiment"
-candidate_param = [0.6, 0.7, 0.8, 0.9]
+data = "/home/azureuser/Data/"
+feature_name = "num_leaves"
+title = "GBDT num_leaves tunning experiment"
+candidate_param = [192, 224, 256, 288, 320, 352]
 file_service = FileService(account_name=os.environ['AZURE_STORAGE_IKELY_ACCOUNT'], 
                                       account_key=os.environ['AZURE_STORAGE_IKELY_KEY'])
 feature_list = ['user_nitems', 'user_norder', 'user_avg_prod_norder',
