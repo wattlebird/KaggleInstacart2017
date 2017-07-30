@@ -10,6 +10,9 @@ def gbdt_cross_validation_data():
     f['order_hour_of_day'] = f.order_hour_of_day.astype('category')
     f['user_prod_reordered'] = f.user_prod_reordered.astype('category')
     f['user_prod_recentlydiscovered'] = f.user_prod_recentlydiscovered.astype('category')
+    if len(forbid_feature_list)!=0:
+        f.drop(forbid_feature_list, 
+                axis=1, inplace=True)
     for i in range(5):
         train = f[f['seed']!=i].drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)
         valid = f[f['seed']==i].drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)
@@ -24,6 +27,9 @@ def gbdt_cross_validation_data_debug():
     f['order_hour_of_day'] = f.order_hour_of_day.astype('category')
     f['user_prod_reordered'] = f.user_prod_reordered.astype('category')
     f['user_prod_recentlydiscovered'] = f.user_prod_recentlydiscovered.astype('category')
+    if len(forbid_feature_list)!=0:
+        f.drop(forbid_feature_list, 
+                axis=1, inplace=True)
     for i in range(5):
         train = f[f['seed']!=i].drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)
         valid = f[f['seed']==i].drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1)

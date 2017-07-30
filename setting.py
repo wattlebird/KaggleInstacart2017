@@ -48,6 +48,12 @@ feature_list = ['user_nitems', 'user_norder', 'user_avg_prod_norder',
        'prod_aisle_reorder_prob', 'prod_department_reorder_prob',
        'aisle_user_reorder_prob', 'department_user_reorder_prob']
 
+forbid_feature_list = [
+    'user_prod_recentlydiscovered', 'hour_prod_user_reorder_prob', 'prod_norder', 'user_prod_order_interval', 
+        'week_prod_user_reorder_prob', 'order_hour_of_day', 'user_nritem_ratio', 'user_prod_days_interval_prod_ratio',
+       'user_prod_days_interval', 'order_dow', 'prod_week_prob', 'department_id', 'prod_dep_reorder_prob'
+]
+
 def uploadfile(src, dest):
     file_service.create_file_from_path('kaggle',
                                        None, # We want to create this blob in the root directory, so we specify None for the directory_name
@@ -58,4 +64,5 @@ def uploadfile(src, dest):
 def uf1score(x, y):
     return f1_score(x.label, x.pred_prob>y)
 
-__all__ = ['params', 'data', 'feature_name', 'title', 'candidate_param', 'uploadfile', 'feature_list', 'uf1score']
+__all__ = ['params', 'data', 'feature_name', 'title', 'candidate_param', 'uploadfile', 'feature_list', 'uf1score',
+'forbid_feature_list']
