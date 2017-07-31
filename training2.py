@@ -4,9 +4,12 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.externals.joblib import Parallel, delayed
 import lightgbm as lgb
 from scipy.optimize import minimize_scalar
-from parametertunning import gbdt_cross_validation_data, gbdt_training
+from parametertunning import gbdt_cross_validation_data, gbdt_training, gbdt_get_testing_data
 from datetime import datetime
 from setting import *
+import gc
+
+gc.enable()
 
 def main():
     thv = []
@@ -47,14 +50,7 @@ def main():
             uploadfile("/tmp/model.txt", "model_{0}_0.txt".format(feature_name))
 
     print("Loading test data...")
-    test = pd.read_hdf(data+"dataset.hdf", "test")
-    test['aisle_id'] = test.aisle_id.astype('category')
-    test['department_id'] = test.department_id.astype('category')
-    test['order_dow'] = test.order_dow.astype('category')
-    test['order_hour_of_day'] = test.order_hour_of_day.astype('category')
-    test['user_prod_reordered'] = test.user_prod_reordered.astype('category')
-    test['user_prod_recentlydiscovered'] = test.user_prod_recentlydiscovered.astype('category')
-
+    test = gbdt_get_testing_data()
     res = []
     for i, (x, model) in enumerate(zip(thv, modelv)):
         print("Predicting using model {0}".format(i+1))

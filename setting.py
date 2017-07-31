@@ -14,6 +14,18 @@ params = {
     'bagging_fraction': 1,
     'verbose': 0
 }
+
+rf_params = {
+    'task': 'train',
+    'boosting_type': 'rf',
+    'objective': 'binary',
+    'metric': {'auc'},
+    'num_leaves': 1024,
+    'feature_fraction': 0.7,
+    'bagging_fraction': 1,
+    'verbose': 0
+}
+
 data = "/home/azureuser/Data/"
 feature_name = "num_leaves"
 title = "GBDT num_leaves tunning experiment"
@@ -49,9 +61,6 @@ feature_list = ['user_nitems', 'user_norder', 'user_avg_prod_norder',
        'aisle_user_reorder_prob', 'department_user_reorder_prob']
 
 forbid_feature_list = [
-    'user_prod_recentlydiscovered', 'hour_prod_user_reorder_prob', 'prod_norder', 'user_prod_order_interval', 
-        'week_prod_user_reorder_prob', 'order_hour_of_day', 'user_nritem_ratio', 'user_prod_days_interval_prod_ratio',
-       'user_prod_days_interval', 'order_dow', 'prod_week_prob', 'department_id', 'prod_dep_reorder_prob'
 ]
 
 def uploadfile(src, dest):
@@ -65,4 +74,4 @@ def uf1score(x, y):
     return f1_score(x.label, x.pred_prob>y)
 
 __all__ = ['params', 'data', 'feature_name', 'title', 'candidate_param', 'uploadfile', 'feature_list', 'uf1score',
-'forbid_feature_list']
+'forbid_feature_list', 'rf_params']
