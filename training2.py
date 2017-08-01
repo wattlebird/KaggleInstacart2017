@@ -10,6 +10,7 @@ from setting import *
 import gc
 
 gc.enable()
+params = rf_params
 
 def main():
     thv = []

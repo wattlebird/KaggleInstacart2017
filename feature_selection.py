@@ -4,6 +4,7 @@ from parametertunning import gbdt_cross_validation_data, gbdt_training, mailsend
 from setting import *
 import gc
 
+params = gbdt_params
 gc.enable()
 
 
@@ -22,7 +23,6 @@ def main():
             #model.save_model("/tmp/tmpmodel");
         aucv.append(np.mean(temp))
         print("Baseline AUC: {0}.".format(aucv[-1]))
-        gc.collect()
 
         print("Feature dropping round.")
         for singlefeature in feature_list:
@@ -36,7 +36,6 @@ def main():
                 #model.save_model("/tmp/tmpmodel");
             aucv.append(np.mean(temp))
             print("\tBaseline AUC: {0}.".format(aucv[-1]))
-            gc.collect()
         mailsend_feature_selection(feature_list, aucv, params)
     except Exception as e:
         try:

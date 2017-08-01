@@ -4,15 +4,18 @@ from sklearn.metrics import f1_score, roc_auc_score
 import lightgbm as lgb
 from setting import *
 from parametertunning import gbdt_get_training_data, gbdt_get_testing_data, gbdt_training
+from datetime import datetime
 import gc
 
 gc.enable()
+params = gbdt_params
 
 def main():
     train = gbdt_get_training_data()
 
     gbdt = gbdt_training(params, train.drop(['order_id', 'user_id', 'product_id', 'seed'], axis=1))
-
+    gbdt.save_model("/tmp/model.txt")
+    uploadfile("/tmp/model.txt", "model.txt")
     test = gbdt_get_testing_data()
     Y = gbdt.predict(test.drop(['order_id', 'user_id', 'product_id'], axis=1))
 
