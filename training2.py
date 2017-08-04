@@ -10,7 +10,7 @@ from setting import *
 import gc
 
 gc.enable()
-params = rf_params
+params = gbdt_params
 
 def main():
     thv = []

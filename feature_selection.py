@@ -7,7 +7,6 @@ import gc
 params = gbdt_params
 gc.enable()
 
-
 def main():
     try:
         # baseline
@@ -17,10 +16,11 @@ def main():
         for i, (train, valid, valid_label) in enumerate(gbdt_cross_validation_data()):
             print("\tCV fold {0}.".format(i+1))
             print("\tStart training...")
-            model = gbdt_training(params, train, valid, verbose=False)
+            model = gbdt_training(params, train, valid, verbose=True)
             print("\tTraining finished.")
             temp[i] = model.best_score['valid_1']['auc']
             #model.save_model("/tmp/tmpmodel");
+        gc.collect()
         aucv.append(np.mean(temp))
         print("Baseline AUC: {0}.".format(aucv[-1]))
 
@@ -30,10 +30,11 @@ def main():
             for i, (train, valid, valid_label) in enumerate(gbdt_cross_validation_data()):
                 print("\t\tCV fold {0}.".format(i+1))
                 print("\t\tStart training...")
-                model = gbdt_training(params, train.drop(singlefeature, axis=1), valid.drop(singlefeature, axis=1), verbose=False)
+                model = gbdt_training(params, train.drop(singlefeature, axis=1), valid.drop(singlefeature, axis=1), verbose=True)
                 print("\t\tTraining finished.")
                 temp[i] = model.best_score['valid_1']['auc']
                 #model.save_model("/tmp/tmpmodel");
+            gc.collect()
             aucv.append(np.mean(temp))
             print("\tBaseline AUC: {0}.".format(aucv[-1]))
         mailsend_feature_selection(feature_list, aucv, params)

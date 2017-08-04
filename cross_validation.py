@@ -7,7 +7,7 @@ from scipy.optimize import minimize_scalar
 from parametertunning import gbdt_cross_validation_data, gbdt_training, mailsend, mailsendfail
 from setting import *
 
-params = rf_params
+params = gbdt_params
 
 def main():
     try:
